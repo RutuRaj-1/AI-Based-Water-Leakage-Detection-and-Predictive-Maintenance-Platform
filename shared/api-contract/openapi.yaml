@@ -1,0 +1,578 @@
+openapi: "3.1.0"
+
+info:
+  title: Pune Water Network AI — REST API
+  version: "0.1.0"
+  description: |
+    REST API for the AI-Based Water Distribution Network Leakage Detection
+    and Predictive Asset Management Platform.
+
+    **Implementation Status:**
+    - `GET /api/v1/health` — ✅ Implemented
+    - All other endpoints — 🔲 Planned (documented here as design proposals)
+
+    This specification is the shared contract between the frontend and backend teams.
+    See `docs/api-contracts.md` for governance and change-management guidelines.
+
+  contact:
+    name: Ruturaj (Team Lead)
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server (backend)
+  - url: https://api.pune-water-ai.example.com/api/v1
+    description: Production server (placeholder — not yet configured)
+
+tags:
+  - name: Health
+    description: Service health and readiness endpoints
+  - name: Networks
+    description: "[PLANNED] Water distribution network management"
+  - name: Pipelines
+    description: "[PLANNED] Pipeline segment data and attributes"
+  - name: Simulations
+    description: "[PLANNED] Hydraulic simulation runs"
+  - name: Observations
+    description: "[PLANNED] Sensor pressure and flow readings"
+  - name: Anomalies
+    description: "[PLANNED] Detected anomaly events"
+  - name: Health Assessments
+    description: "[PLANNED] Pipeline Health Score records"
+  - name: Predictions
+    description: "[PLANNED] Failure risk predictions"
+  - name: Maintenance
+    description: "[PLANNED] Maintenance work-order recommendations"
+  - name: GIS
+    description: "[PLANNED] Geospatial network feature endpoints"
+
+paths:
+  # ===========================================================================
+  # IMPLEMENTED: Health endpoint
+  # ===========================================================================
+  /health:
+    get:
+      operationId: get_health
+      summary: Service health check
+      description: |
+        Returns the current health status of the backend service.
+
+        **Note:** This endpoint only confirms that the FastAPI application is
+        running. It does NOT check database connectivity, ML model readiness,
+        or simulation engine availability — those checks will be added when
+        the corresponding services are implemented.
+      tags:
+        - Health
+      responses:
+        "200":
+          description: Service is healthy and running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+                version: "0.1.0"
+                environment: development
+
+  # ===========================================================================
+  # PLANNED: Networks
+  # ===========================================================================
+  /networks:
+    get:
+      operationId: list_networks
+      summary: "[PLANNED] List all water distribution networks"
+      description: >
+        Returns a paginated list of water distribution networks available
+        in the system. Not yet implemented.
+      tags:
+        - Networks
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated list of networks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NetworkListResponse"
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  /networks/{network_id}:
+    get:
+      operationId: get_network
+      summary: "[PLANNED] Get a specific network"
+      tags:
+        - Networks
+      parameters:
+        - $ref: "#/components/parameters/NetworkIdParam"
+      responses:
+        "200":
+          description: Network detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Network"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: Pipelines
+  # ===========================================================================
+  /networks/{network_id}/pipes:
+    get:
+      operationId: list_pipes
+      summary: "[PLANNED] List pipe segments in a network"
+      tags:
+        - Pipelines
+      parameters:
+        - $ref: "#/components/parameters/NetworkIdParam"
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated list of pipe segments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipeListResponse"
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  /pipes/{pipe_id}:
+    get:
+      operationId: get_pipe
+      summary: "[PLANNED] Get a specific pipe segment"
+      tags:
+        - Pipelines
+      parameters:
+        - $ref: "#/components/parameters/PipeIdParam"
+      responses:
+        "200":
+          description: Pipe segment detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pipe"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: Simulations
+  # ===========================================================================
+  /simulations:
+    get:
+      operationId: list_simulation_runs
+      summary: "[PLANNED] List hydraulic simulation runs"
+      tags:
+        - Simulations
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated list of simulation runs
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+    post:
+      operationId: trigger_simulation_run
+      summary: "[PLANNED] Trigger a new simulation run"
+      tags:
+        - Simulations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulationRunRequest"
+      responses:
+        "202":
+          description: Simulation run accepted and queued
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: Observations
+  # ===========================================================================
+  /observations:
+    get:
+      operationId: list_observations
+      summary: "[PLANNED] Query sensor observations"
+      description: >
+        Returns time-series pressure and flow readings filtered by sensor,
+        pipe, network, or time range.
+      tags:
+        - Observations
+      parameters:
+        - name: pipe_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated time-series observations
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: Anomalies
+  # ===========================================================================
+  /anomalies:
+    get:
+      operationId: list_anomalies
+      summary: "[PLANNED] List detected anomaly events"
+      tags:
+        - Anomalies
+      parameters:
+        - name: active
+          in: query
+          schema:
+            type: boolean
+          description: Filter to only active (unresolved) anomalies
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated anomaly list
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: Health Assessments
+  # ===========================================================================
+  /health-assessments:
+    get:
+      operationId: list_health_assessments
+      summary: "[PLANNED] List pipeline health assessments"
+      tags:
+        - Health Assessments
+      parameters:
+        - name: pipe_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated health assessment records
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: Risk Predictions
+  # ===========================================================================
+  /predictions:
+    get:
+      operationId: list_risk_predictions
+      summary: "[PLANNED] List failure risk predictions"
+      tags:
+        - Predictions
+      parameters:
+        - name: pipe_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated risk prediction records
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: Maintenance Recommendations
+  # ===========================================================================
+  /maintenance/recommendations:
+    get:
+      operationId: list_maintenance_recommendations
+      summary: "[PLANNED] List prioritised maintenance work orders"
+      tags:
+        - Maintenance
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, completed, deferred]
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PageSizeParam"
+      responses:
+        "200":
+          description: Paginated maintenance recommendation list
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+  # ===========================================================================
+  # PLANNED: GIS Features
+  # ===========================================================================
+  /networks/{network_id}/features:
+    get:
+      operationId: get_network_features
+      summary: "[PLANNED] Get GeoJSON FeatureCollection for a network"
+      description: >
+        Returns the complete pipe network as a GeoJSON FeatureCollection,
+        with each pipe segment as a LineString feature.
+        Properties include pipe attributes and the latest health score.
+      tags:
+        - GIS
+      parameters:
+        - $ref: "#/components/parameters/NetworkIdParam"
+      responses:
+        "200":
+          description: GeoJSON FeatureCollection
+          content:
+            application/geo+json:
+              schema:
+                type: object
+                description: GeoJSON FeatureCollection (RFC 7946)
+        "501":
+          $ref: "#/components/responses/NotImplemented"
+
+# ===========================================================================
+# Components
+# ===========================================================================
+components:
+  parameters:
+    NetworkIdParam:
+      name: network_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the water distribution network
+
+    PipeIdParam:
+      name: pipe_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID of the pipe segment
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number (1-indexed)
+
+    PageSizeParam:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+      description: Number of items per page
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotImplemented:
+      description: This endpoint has not yet been implemented
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: NOT_IMPLEMENTED
+              message: This endpoint is planned but not yet implemented
+
+  schemas:
+    # -------------------------------------------------------------------------
+    # Health
+    # -------------------------------------------------------------------------
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+        - environment
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          description: Always "ok" when the service is running
+        version:
+          type: string
+          description: Application version string
+          example: "0.1.0"
+        environment:
+          type: string
+          enum: [development, staging, production]
+          description: Deployment environment
+
+    # -------------------------------------------------------------------------
+    # Error
+    # -------------------------------------------------------------------------
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+            message:
+              type: string
+              description: Human-readable error description
+            details:
+              type: object
+              description: Optional additional error context
+
+    # -------------------------------------------------------------------------
+    # Pagination
+    # -------------------------------------------------------------------------
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+
+    # -------------------------------------------------------------------------
+    # Networks
+    # -------------------------------------------------------------------------
+    Network:
+      type: object
+      description: "[PLANNED] Water distribution network"
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    NetworkListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Network"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    # -------------------------------------------------------------------------
+    # Pipes
+    # -------------------------------------------------------------------------
+    Pipe:
+      type: object
+      description: "[PLANNED] Pipe segment in the water distribution network"
+      properties:
+        id:
+          type: string
+          format: uuid
+        network_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        length_m:
+          type: number
+          format: float
+        diameter_mm:
+          type: number
+          format: float
+        material:
+          type: string
+          example: CI
+        installation_year:
+          type: integer
+        latest_health_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Most recent health score (null if not yet assessed)
+
+    PipeListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Pipe"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    # -------------------------------------------------------------------------
+    # Simulations
+    # -------------------------------------------------------------------------
+    SimulationRunRequest:
+      type: object
+      description: "[PLANNED] Request body to trigger a hydraulic simulation run"
+      required:
+        - network_id
+        - scenario_type
+      properties:
+        network_id:
+          type: string
+          format: uuid
+        scenario_type:
+          type: string
+          enum: [normal, pipe_burst, background_leak, demand_surge, blockage]
+        duration_hours:
+          type: integer
+          default: 24

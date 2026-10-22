@@ -1,0 +1,198 @@
+# =============================================================================
+# Pune Water Network AI — .gitignore
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Secrets and environment files
+# ---------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.secret
+secrets/
+
+# Allow example/template files
+!.env.example
+!**/.env.example
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.env/
+backend/.venv/
+backend/venv/
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.lcov
+nosetests.xml
+test-results/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# ---------------------------------------------------------------------------
+# Node / JavaScript / TypeScript
+# ---------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Frontend build output
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+# Vite / TS cache
+*.tsbuildinfo
+frontend/.vite/
+.cache/
+
+# Storybook
+storybook-static/
+
+# ---------------------------------------------------------------------------
+# Data directories — keep folder structure, exclude actual data files
+# ---------------------------------------------------------------------------
+data/raw/**
+data/processed/**
+data/synthetic/**
+
+# Keep the directories themselves
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/synthetic/.gitkeep
+
+# Common data file types
+*.csv
+*.json.gz
+*.parquet
+*.feather
+*.arrow
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.shp
+*.dbf
+*.shx
+*.geojson
+*.gpkg
+*.tiff
+*.tif
+*.geotif
+
+# Allow small fixture/sample JSON files tracked deliberately
+!backend/tests/fixtures/**/*.json
+!shared/api-contract/examples/**/*.json
+
+# ---------------------------------------------------------------------------
+# ML / AI model artifacts
+# ---------------------------------------------------------------------------
+models/
+*.pth
+*.pt
+*.ckpt
+*.weights
+*.h5
+*.pb
+*.onnx
+checkpoints/
+runs/
+mlruns/
+outputs/
+reports/generated/
+*.pkl
+
+# ---------------------------------------------------------------------------
+# Simulation output artifacts
+# ---------------------------------------------------------------------------
+*.inp.bak
+*.rpt
+simulation_output/
+*.epanet_out
+
+# ---------------------------------------------------------------------------
+# Databases and local storage
+# ---------------------------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+*.sql.gz
+pgdata/
+postgres_data/
+
+# ---------------------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------------------
+# Allow docker-compose files but ignore local overrides
+docker-compose.override.yml
+
+# ---------------------------------------------------------------------------
+# OS and editors
+# ---------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+.vscode/settings.json
+.vscode/*.code-workspace
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------------------------------------------------------------------------
+# Logs and temporary files
+# ---------------------------------------------------------------------------
+logs/
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# ---------------------------------------------------------------------------
+# CI / Build tools
+# ---------------------------------------------------------------------------
+.eslintcache
+.stylelintcache
