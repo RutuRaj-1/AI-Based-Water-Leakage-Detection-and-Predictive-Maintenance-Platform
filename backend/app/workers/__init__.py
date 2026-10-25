@@ -1,9 +1,7 @@
 """
-Background workers package.
-Not yet implemented — placeholder for Stage 2+.
-
-Will handle asynchronous tasks such as:
-  - Triggering and monitoring simulation runs
-  - Running ML batch inference
-  - Generating maintenance recommendations
+Workers package.
 """
+
+from app.workers.simulation_worker import SimulationWorker, simulation_worker
+
+__all__ = ["SimulationWorker", "simulation_worker"]

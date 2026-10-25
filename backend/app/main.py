@@ -27,9 +27,13 @@ app = FastAPI(
     version=settings.app_version,
     description=(
         "AI-Based Water Distribution Network Leakage Detection "
-        "and Predictive Asset Management Platform.\n\n"
-        "**Foundation stage:** Only the health endpoint is implemented. "
-        "All other endpoints are planned for future development stages."
+        "and Predictive Asset Management Platform for Pune Municipal Network.\n\n"
+        "Features:\n"
+        "- GeoJSON spatial feature endpoints for React-Leaflet maps (/gis/pipes, /gis/nodes, /gis/leaks)\n"
+        "- WNTR / EPANET hydraulic simulation engine with 24-hour diurnal modeling\n"
+        "- AI/ML Anomaly Detection (Residual Z-Score & Isolation Forest)\n"
+        "- Composite 0-100 pipeline health scoring and failure risk predictions\n"
+        "- Ranked maintenance work orders and real-time telemetry\n"
     ),
     docs_url="/docs",
     redoc_url="/redoc",
