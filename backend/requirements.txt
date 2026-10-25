@@ -4,14 +4,23 @@ pydantic>=2.10.0
 pydantic-settings>=2.5.0
 python-dotenv>=1.0.1
 
-# Database (install when ready to implement DB layer)
-# sqlalchemy[asyncio]>=2.0.31
-# asyncpg>=0.29.0
-# alembic>=1.13.2
-# geoalchemy2>=0.15.1
+# Database & Spatial
+sqlalchemy[asyncio]>=2.0.31
+asyncpg>=0.29.0
+aiosqlite>=0.20.0
+alembic>=1.13.2
+geoalchemy2>=0.15.1
+shapely>=2.0.4
+
+# Simulation & Machine Learning
+numpy>=1.26.0
+pandas>=2.2.0
+scikit-learn>=1.5.0
+networkx>=3.0
 
 # Testing
 pytest>=8.2.0
 pytest-asyncio>=0.24.0
 httpx>=0.27.0
 anyio>=4.0.0
+
