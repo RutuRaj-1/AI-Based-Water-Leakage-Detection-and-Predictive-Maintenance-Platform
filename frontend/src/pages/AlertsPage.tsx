@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { TopNavbar } from '../components/dashboard/TopNavbar'
 import { Badge } from '../components/common/Badge'
-import { simulatedAlerts, criticalAssets } from '../data/dashboardData'
+import { useDashboardData } from '../context/dashboardDataContext'
 import type { SeverityLevel } from '../types/dashboard'
 
 export function AlertsPage() {
+  const { data, setAlertStatus } = useDashboardData()
+  const simulatedAlerts = data.alerts
+  const criticalAssets = data.criticalAssets
   const [selectedAlertId, setSelectedAlertId] = useState<string>(simulatedAlerts[0]?.id || '')
   const [severityFilter, setSeverityFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -26,7 +29,7 @@ export function AlertsPage() {
 
       return matchesSeverity && matchesSearch
     })
-  }, [severityFilter, searchQuery])
+  }, [severityFilter, searchQuery, simulatedAlerts])
 
   // Current selected alert
   const selectedAlert = useMemo(() => {
@@ -35,14 +38,14 @@ export function AlertsPage() {
       filteredAlerts[0] ||
       simulatedAlerts[0]
     )
-  }, [selectedAlertId, filteredAlerts])
+  }, [selectedAlertId, filteredAlerts, simulatedAlerts])
 
   // Matched critical asset if any
   const matchedAsset = useMemo(() => {
     if (!selectedAlert) return null
     const cleanId = selectedAlert.pipelineId.replace('Pipe ', '').trim()
     return criticalAssets.find((asset) => asset.id === cleanId)
-  }, [selectedAlert])
+  }, [selectedAlert, criticalAssets])
 
   const countsBySeverity = useMemo(() => {
     return {
@@ -53,7 +56,7 @@ export function AlertsPage() {
       low: simulatedAlerts.filter((a) => a.severity === 'low').length,
       normal: simulatedAlerts.filter((a) => a.severity === 'normal').length,
     }
-  }, [])
+  }, [simulatedAlerts])
 
   return (
     <DashboardLayout topNavbar={<TopNavbar />}>
@@ -419,6 +422,28 @@ export function AlertsPage() {
                     Prioritize acoustic correlation survey on {selectedAlert.pipelineId} and inspect branch valves. Rapid pipe joint clamping recommended within 4 hours to prevent hydraulic cavitation.
                   </p>
                 </div>
+
+                {/* Operator actions (call the backend) */}
+                {selectedAlert.status !== 'resolved' && (
+                  <div className="flex items-center gap-2">
+                    {selectedAlert.status === 'active' && (
+                      <button
+                        type="button"
+                        onClick={() => void setAlertStatus(selectedAlert.id, 'investigating')}
+                        className="flex-1 py-2 px-3 rounded-lg bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 transition-colors cursor-pointer"
+                      >
+                        Acknowledge &amp; Investigate
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void setAlertStatus(selectedAlert.id, 'resolved')}
+                      className="flex-1 py-2 px-3 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors cursor-pointer"
+                    >
+                      Mark Resolved
+                    </button>
+                  </div>
+                )}
 
                 {/* Quick Actions */}
                 <div className="flex items-center gap-2 pt-2 border-t border-slate-100">

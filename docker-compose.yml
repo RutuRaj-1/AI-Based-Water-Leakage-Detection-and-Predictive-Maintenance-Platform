@@ -1,18 +1,9 @@
 # =============================================================================
 # Pune Water Network AI — docker-compose.yml
-# Local development environment.
-# Provides only the PostgreSQL/PostGIS database service required for the
-# backend. Additional services (Redis, Celery workers, etc.) will be added
-# in future iterations as requirements are confirmed.
+# Full stack environment: PostgreSQL/PostGIS, FastAPI Backend, React Frontend.
 # =============================================================================
 
-version: "3.9"
-
 services:
-  # ---------------------------------------------------------------------------
-  # PostgreSQL 16 with PostGIS 3.4 extension
-  # PostGIS is required for spatial pipeline network queries.
-  # ---------------------------------------------------------------------------
   db:
     image: postgis/postgis:16-3.4
     container_name: pune_water_db
@@ -25,7 +16,6 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Optional: mount init scripts (place *.sql files here to run on first start)
       - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pguser} -d ${POSTGRES_DB:-pune_water_network}"]
@@ -33,9 +23,39 @@ services:
       timeout: 5s
       retries: 5
 
-# ---------------------------------------------------------------------------
-# Named volumes
-# ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pune_water_backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-pguser}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-pune_water_network}
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pune_water_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   postgres_data:
     driver: local

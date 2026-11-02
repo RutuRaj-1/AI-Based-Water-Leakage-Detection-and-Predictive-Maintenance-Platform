@@ -3,20 +3,28 @@ import { Link } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { TopNavbar } from '../components/dashboard/TopNavbar'
 import { Badge } from '../components/common/Badge'
-import { maintenanceTasks, criticalAssets } from '../data/dashboardData'
+import { useDashboardData } from '../context/dashboardDataContext'
 import type { MaintenanceTask } from '../types/dashboard'
 
+const STATUS_LABEL = { open: 'Scheduled', in_progress: 'In Progress', completed: 'Completed' } as const
+const STATUS_TO_API = { Scheduled: 'open', Dispatched: 'in_progress', 'In Progress': 'in_progress', Completed: 'completed' } as const
+
 export function MaintenancePage() {
+  const { data, connection, setTaskStatus } = useDashboardData()
+  const maintenanceTasks = data.maintenanceTasks
+  const criticalAssets = data.criticalAssets
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [selectedTaskId, setSelectedTaskId] = useState<string>(maintenanceTasks[0]?.id || '')
-  const [taskStatusMap, setTaskStatusMap] = useState<Record<string, string>>({
-    'task-1': 'In Progress',
-    'task-2': 'Dispatched',
-    'task-3': 'Scheduled',
-    'task-4': 'Scheduled',
-    'task-5': 'Planned',
-  })
+  // Local status overrides, only used while the backend is unreachable.
+  const [offlineStatus, setOfflineStatus] = useState<Record<string, string>>({})
+  const taskStatusMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const task of maintenanceTasks) {
+      map[task.id] = offlineStatus[task.id] ?? STATUS_LABEL[task.status ?? 'open']
+    }
+    return map
+  }, [maintenanceTasks, offlineStatus])
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -33,7 +41,7 @@ export function MaintenancePage() {
 
       return matchesPriority && matchesSearch
     })
-  }, [priorityFilter, searchQuery])
+  }, [priorityFilter, searchQuery, maintenanceTasks])
 
   // Selected task
   const selectedTask: MaintenanceTask | undefined = useMemo(() => {
@@ -42,7 +50,7 @@ export function MaintenancePage() {
       filteredTasks[0] ||
       maintenanceTasks[0]
     )
-  }, [selectedTaskId, filteredTasks])
+  }, [selectedTaskId, filteredTasks, maintenanceTasks])
 
   // Correlate with critical asset if applicable
   const matchedAsset = useMemo(() => {
@@ -50,7 +58,7 @@ export function MaintenancePage() {
     return criticalAssets.find((a) =>
       selectedTask.targetAsset.includes(a.id)
     )
-  }, [selectedTask])
+  }, [selectedTask, criticalAssets])
 
   const countsByPriority = useMemo(() => {
     return {
@@ -60,10 +68,14 @@ export function MaintenancePage() {
       medium: maintenanceTasks.filter((t) => t.priority === 'medium').length,
       routine: maintenanceTasks.filter((t) => t.priority === 'routine').length,
     }
-  }, [])
+  }, [maintenanceTasks])
 
   const handleUpdateStatus = (taskId: string, newStatus: string) => {
-    setTaskStatusMap((prev) => ({ ...prev, [taskId]: newStatus }))
+    if (connection !== 'live') {
+      setOfflineStatus((prev) => ({ ...prev, [taskId]: newStatus }))
+      return
+    }
+    void setTaskStatus(taskId, STATUS_TO_API[newStatus as keyof typeof STATUS_TO_API])
   }
 
   const getPriorityBadgeVariant = (priority: string) => {

@@ -5,13 +5,13 @@ import { TopNavbar } from '../components/dashboard/TopNavbar'
 import { WaterNetworkMap } from '../components/gis/WaterNetworkMap'
 import { Badge } from '../components/common/Badge'
 import type { SelectedFeature } from '../types/dashboard'
-import {
-  syntheticLeaks,
-  syntheticNodes,
-  syntheticPipelines,
-} from '../data/puneSyntheticNetworkGeoJSON'
+import { useDashboardData } from '../context/dashboardDataContext'
 
 export function NetworkMapPage() {
+  const { data } = useDashboardData()
+  const syntheticLeaks = data.leaks
+  const syntheticNodes = data.nodes
+  const syntheticPipelines = data.pipelines
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
 
   const handleSelectFeature = (feature: SelectedFeature | null) => {

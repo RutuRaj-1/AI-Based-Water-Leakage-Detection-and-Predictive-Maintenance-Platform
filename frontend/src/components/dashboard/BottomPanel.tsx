@@ -1,62 +1,68 @@
-import type { SimulationTelemetry } from '../../types/dashboard'
+import { useDashboardData } from '../../context/dashboardDataContext'
 import { Badge } from '../common/Badge'
+import { Sparkline } from '../common/Sparkline'
 
 interface BottomPanelProps {
   className?: string
 }
 
+const firstNumber = (s: string) => parseFloat(/[\d.]+/.exec(s)?.[0] ?? '0') || 0
+
 export function BottomPanel({ className = '' }: BottomPanelProps) {
-  const telemetry: SimulationTelemetry = {
-    scenarioName: 'Pune Morning Peak Demand (Simulated)',
-    timeStep: 'Step 32 / 96 · T+08:00 hrs',
-    engineStatus: 'running',
-    meanPressureBar: 3.42,
-    totalFlowMld: 14.8,
-    estimatedLossPct: 3.8,
-    activeLeaksCount: 3,
-    totalMonitoredPipes: 1280,
-    totalNodes: 842,
-    networkHealthScore: 78.4,
-  }
+  const { data, connection } = useDashboardData()
+  const { telemetry, summary, history } = data
+
+  const open = data.alerts.filter((a) => a.status !== 'resolved')
+  const totalLoss = open.reduce((s, a) => s + (a.estimatedLossM3h ?? firstNumber(a.estimatedLoss)), 0)
+  const pressures = data.pipelines.features.map((f) => f.properties.pressureBar)
+  const minP = pressures.length ? Math.min(...pressures) : 0
+  const maxP = pressures.length ? Math.max(...pressures) : 0
+  const healthyPct = summary.conditionCategories.find((c) => c.id === 'healthy')?.percentage ?? 0
+  const score = telemetry.networkHealthScore
+  const engineActive = connection === 'live' && telemetry.engineStatus === 'running'
 
   const statItems = [
     {
       label: 'Composite Network Health',
-      value: `${telemetry.networkHealthScore}%`,
-      badge: 'Good State',
-      badgeVariant: 'normal' as const,
-      subtext: '96% assets in service',
+      value: `${score}%`,
+      badge: score >= 80 ? 'Good State' : score >= 60 ? 'Fair' : 'Poor',
+      badgeVariant: (score >= 80 ? 'normal' : score >= 60 ? 'info' : 'critical') as 'normal' | 'info' | 'critical',
+      subtext: `${healthyPct}% of network length healthy`,
+      trend: history.map((h) => h.networkHealthScore),
     },
     {
       label: 'Monitored Assets',
-      value: '2,122 Items',
-      badge: 'Active Scada',
+      value: `${telemetry.totalMonitoredPipes + telemetry.totalNodes} Items`,
+      badge: connection === 'live' ? 'Live Telemetry' : 'Cached',
       badgeVariant: 'info' as const,
-      subtext: `${telemetry.totalMonitoredPipes} pipes · ${telemetry.totalNodes} nodes`,
+      subtext: `${telemetry.totalMonitoredPipes} pipes Â· ${telemetry.totalNodes} nodes`,
+      trend: [] as number[],
     },
     {
       label: 'Simulated Leak Detections',
       value: `${telemetry.activeLeaksCount} Anomalies`,
-      badge: 'Attention',
-      badgeVariant: 'critical' as const,
-      subtext: 'Estimated loss ~66.5 m³/hr',
+      badge: telemetry.activeLeaksCount > 0 ? 'Attention' : 'All Clear',
+      badgeVariant: (telemetry.activeLeaksCount > 0 ? 'critical' : 'normal') as 'critical' | 'normal',
+      subtext: `Estimated loss ~${totalLoss.toFixed(1)} mÂ³/hr`,
+      trend: history.map((h) => h.activeLeaksCount),
     },
     {
       label: 'System Pressure (Mean)',
       value: `${telemetry.meanPressureBar} bar`,
       badge: 'Nominal',
       badgeVariant: 'normal' as const,
-      subtext: 'Min 2.1 bar · Max 4.8 bar',
+      subtext: `Min ${minP.toFixed(1)} bar Â· Max ${maxP.toFixed(1)} bar`,
+      trend: history.map((h) => h.meanPressureBar),
     },
     {
       label: 'Current Total Flow',
       value: `${telemetry.totalFlowMld} MLD`,
-      badge: 'Peak Hour',
+      badge: telemetry.activeLeaksCount > 0 ? 'Loss Detected' : 'Steady',
       badgeVariant: 'accent' as const,
       subtext: `Unaccounted loss: ~${telemetry.estimatedLossPct}%`,
+      trend: history.map((h) => h.totalFlowMld),
     },
   ]
-
   return (
     <footer
       className={`bottom-panel bg-white border-t border-slate-200 p-3 sm:p-4 text-slate-800 shadow-xs ${className}`}
@@ -83,8 +89,8 @@ export function BottomPanel({ className = '' }: BottomPanelProps) {
               <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
                 Simulation Engine
               </span>
-              <Badge variant="normal" size="sm" pulsing>
-                Active
+              <Badge variant={engineActive ? 'normal' : 'neutral'} size="sm" pulsing={engineActive}>
+                {connection !== 'live' ? 'Offline' : telemetry.engineStatus === 'paused' ? 'Paused' : 'Active'}
               </Badge>
             </div>
             <div className="text-[11px] text-slate-700 font-medium truncate">
@@ -111,8 +117,9 @@ export function BottomPanel({ className = '' }: BottomPanelProps) {
                   {item.badge}
                 </Badge>
               </div>
-              <div className="text-base font-bold text-slate-900 tracking-tight">
-                {item.value}
+              <div className="flex items-end justify-between gap-2">
+                <div className="text-base font-bold text-slate-900 tracking-tight">{item.value}</div>
+                <Sparkline values={item.trend.slice(-40)} width={56} height={18} stroke="#64748B" />
               </div>
               <div className="text-[10px] text-slate-500 truncate mt-0.5">
                 {item.subtext}

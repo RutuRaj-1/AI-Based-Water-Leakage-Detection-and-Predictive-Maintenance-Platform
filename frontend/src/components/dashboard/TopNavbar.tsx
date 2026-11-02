@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Badge } from '../common/Badge'
+import { useDashboardData } from '../../context/dashboardDataContext'
+import { SimulationControls } from './SimulationControls'
 
 interface TopNavbarProps {
   activeTab?: string
@@ -9,11 +11,13 @@ interface TopNavbarProps {
 
 export function TopNavbar({ activeTab, onTabChange }: TopNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { data } = useDashboardData()
+  const openAlerts = data.alerts.filter((a) => a.status !== 'resolved').length
 
   const navItems = [
     { to: '/', label: 'Overview', end: true },
     { to: '/network-map', label: 'Network Map' },
-    { to: '/alerts', label: 'Alerts', badgeCount: 3 },
+    { to: '/alerts', label: 'Alerts', badgeCount: openAlerts },
     { to: '/maintenance', label: 'Maintenance' },
   ]
 
@@ -98,6 +102,8 @@ export function TopNavbar({ activeTab, onTabChange }: TopNavbarProps) {
 
         {/* Right Status Controls */}
         <div className="flex items-center gap-3">
+          <SimulationControls />
+
           {/* Simulation Badge */}
           <Badge variant="neutral" size="md" pulsing={true} className="bg-slate-50 border-slate-200 text-slate-700">
             <span className="text-[11px] font-bold tracking-wider uppercase text-slate-700">

@@ -22,10 +22,8 @@ import {
   PUNE_DEFAULT_ZOOM,
   PUNE_MAP_CENTER,
   getConditionColor,
-  syntheticLeaks,
-  syntheticNodes,
-  syntheticPipelines,
 } from '../../data/puneSyntheticNetworkGeoJSON'
+import { useDashboardData } from '../../context/dashboardDataContext'
 import { MapLayerControls } from './MapLayerControls'
 import { MapLegend } from './MapLegend'
 import { SyntheticDataDisclaimer } from './SyntheticDataDisclaimer'
@@ -128,6 +126,12 @@ export function WaterNetworkMap({
   selectedAssetId,
   onSelectFeature,
 }: WaterNetworkMapProps) {
+  // Live network geometry/telemetry from the backend (falls back to bundled data offline)
+  const { data } = useDashboardData()
+  const syntheticLeaks = data.leaks
+  const syntheticNodes = data.nodes
+  const syntheticPipelines = data.pipelines
+
   // Layer visibility state
   const [showPipelines, setShowPipelines] = useState(true)
   const [showNodes, setShowNodes] = useState(true)
@@ -165,7 +169,7 @@ export function WaterNetworkMap({
     }
 
     return null
-  }, [selectedAssetId])
+  }, [selectedAssetId, syntheticLeaks, syntheticPipelines, syntheticNodes])
 
   // Active fly target: user click takes precedence when active, otherwise external target
   const activeFlyTarget = clickedTarget ?? externalTarget
@@ -196,7 +200,7 @@ export function WaterNetworkMap({
     }
 
     return clickedSelection
-  }, [selectedAssetId, clickedSelection])
+  }, [selectedAssetId, clickedSelection, syntheticLeaks, syntheticPipelines, syntheticNodes])
 
   const handleSelectPipeline = (pipe: PipelineProperties, coords: [number, number][]) => {
     const feature: SelectedFeature = { type: 'pipeline', properties: pipe }
@@ -243,7 +247,7 @@ export function WaterNetworkMap({
         positions,
       }
     })
-  }, [])
+  }, [syntheticPipelines])
 
   const currentSelectedId =
     activeSelection?.properties.id ?? selectedAssetId ?? null

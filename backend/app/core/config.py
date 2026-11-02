@@ -31,6 +31,20 @@ class Settings(BaseSettings):
     # Database (not yet used in the foundation; connection implemented in Stage 2)
     database_url: str = "postgresql+psycopg://pguser:changeme@localhost:5432/pune_water_network"
 
+    # Optional API key. When set, every mutating request (POST/PATCH/DELETE)
+    # must send it in the `X-API-Key` header. Empty = open (local dev).
+    api_key: str = ""
+
+    # ---- Simulation / automation engine -----------------------------------
+    simulation_autostart: bool = True          # run the live ticker on startup
+    simulation_tick_seconds: float = 3.0       # wall-clock seconds between ticks
+    simulation_minutes_per_tick: int = 5       # simulated minutes per tick
+    simulation_seed: int = 42                  # deterministic scenarios
+    simulation_auto_leaks: bool = True         # randomly inject new leaks
+    simulation_auto_leak_probability: float = 0.03
+    automation_auto_dispatch: bool = True      # escalate + dispatch crews
+    automation_auto_repair: bool = True        # crews finish emergency repairs
+
     @property
     def allowed_origins_list(self) -> list[str]:
         """Parse comma-separated origins string into a list."""

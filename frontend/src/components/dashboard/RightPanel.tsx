@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import { Badge } from '../common/Badge'
-import {
-  simulatedAlerts,
-  criticalAssets,
-  maintenanceTasks,
-} from '../../data/dashboardData'
+import { useDashboardData } from '../../context/dashboardDataContext'
 
 interface RightPanelProps {
   className?: string
@@ -17,6 +13,10 @@ export function RightPanel({
   selectedAssetId = null,
   onSelectAsset,
 }: RightPanelProps) {
+  const { data } = useDashboardData()
+  const simulatedAlerts = data.alerts.filter((a) => a.status !== 'resolved')
+  const criticalAssets = data.criticalAssets
+  const maintenanceTasks = data.maintenanceTasks
   const [activeTab, setActiveTab] = useState<'alerts' | 'assets' | 'maintenance'>('alerts')
 
   const isMatched = (id: string, refId?: string) => {

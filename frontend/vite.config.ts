@@ -16,10 +16,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // Proxy API requests to the backend during development
+    // Proxy API requests to the backend during development.
+    // The frontend calls the same-origin `/api/v1/...` (no CORS needed).
+    // Override the target with VITE_PROXY_TARGET (e.g. http://backend:8000).
     proxy: {
       '/api': {
-        target: process.env.VITE_API_BASE_URL ?? 'http://localhost:8000',
+        target: process.env.VITE_PROXY_TARGET ?? 'http://localhost:8000',
         changeOrigin: true,
       },
     },
