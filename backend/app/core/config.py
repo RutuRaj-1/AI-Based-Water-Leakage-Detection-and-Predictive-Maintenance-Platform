@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:5173"
 
     # Database (not yet used in the foundation; connection implemented in Stage 2)
-    database_url: str = "postgresql+asyncpg://pguser:changeme@localhost:5432/pune_water_network"
+    database_url: str = "postgresql+psycopg://pguser:changeme@localhost:5432/pune_water_network"
 
     @property
     def allowed_origins_list(self) -> list[str]:
